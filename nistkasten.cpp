@@ -3,7 +3,12 @@
  * 
  * Handles all low level io with the PiFace
  * 
- * Jan Arnhold, April 2013
+ * Jan Arnhold, April 2013 - April 2015
+ *
+ * 2015 04 03
+ *
+ * Added Status LED feature
+ *   Status LED is connected to PIN 5
  * 
  **********************************************************************/
 
@@ -26,6 +31,7 @@ const long TIMESLICE_FAST = 100;  // milliseconds
 // output sensors
 const char OPIN_IR_SENSOR = 7;
 const char OPIN_LIGHT = 8;
+const char OPIN_STATUS = 6;
 
 // input sensors
 const char IPIN_QUIT =4;
@@ -151,6 +157,11 @@ void led_light( char enabled = 1 )
 	pfio_digital_write( OPIN_LIGHT, enabled );
 }
 
+void led_status( char enabled = 1 )
+{
+	pfio_digital_write( OPIN_STATUS, enabled );
+}
+
 /**********************************************************************
  * 
  * Named Pipe functions
@@ -247,6 +258,41 @@ void photo(const char *p)
 	sprintf(cmd, "%s %s", PHOTO_CMD, p );
 	//system( cmd );
 	led_light( 0 );
+}
+
+/**********************************************************************
+ * Status LED
+ * 
+ * 
+ *********************************************************************/
+
+// Pause time between status displays in ms
+const unsigned int STATUS_INIT_PAUSE = 2000;
+const unsigned int STATUS_OK_BLINK   = 500;
+const unsigned int STATUS_ERR_BLINK  = 1000;
+
+unsigned int status_time;
+
+void reset_status()
+{
+	status_WLAN_Err = 0;
+	status_time = 0;
+}
+
+void status_loop()
+{
+	if( status_time == 0 ){
+		led_status( 1 );
+	}
+	if( status_time == 1 ){
+		led_status( 0 );
+	}
+	
+	if( status_time > 10 ){
+		status_time = 0;
+	}else{
+		status_time++;
+	}
 }
 
 /**********************************************************************
@@ -356,6 +402,8 @@ void main_loop()
 
 			inc_duration( DURATION_WAIT_NEXT_PHOTO, ts.tv_nsec / MSEC );
 		}
+
+		status_loop();
 
 		pf_prev_state = pf_curr_state;
 		nanosleep( &ts, NULL );
