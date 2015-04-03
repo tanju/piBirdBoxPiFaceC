@@ -275,7 +275,6 @@ unsigned int status_time;
 
 void reset_status()
 {
-	status_WLAN_Err = 0;
 	status_time = 0;
 }
 
@@ -435,6 +434,8 @@ int main(int argc, char *argv[])
 
 	// Initialize named pipe
 	pipe_init();
+
+	reset_status();
 
 	// This is the main loop
 	main_loop();
